@@ -1,5 +1,4 @@
-﻿using DotnetSpider.Sample.samples;
-using SpiderTest.Image;
+﻿using SpiderTest.Image;
 using SpiderTest.Music;
 using System;
 using System.Threading.Tasks;
