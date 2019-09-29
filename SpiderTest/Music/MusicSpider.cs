@@ -14,7 +14,7 @@ namespace SpiderTest.Music
 {
     public class MusicSpider
     {
-        public static void Run()
+        public static void Run(string loaction)
         {
             Downloader.GetInstance().Start();
 
@@ -38,12 +38,13 @@ namespace SpiderTest.Music
 
             spider.Id = Guid.NewGuid().ToString("N"); // 设置任务标识
             spider.Name = "网易云音乐"; // 设置任务名称
-            spider.Speed = 2; // 设置采集速度, 表示每秒下载多少个请求, 大于 1 时越大速度越快, 小于 1 时越小越慢, 不能为0.
+            spider.Speed = 10; // 设置采集速度, 表示每秒下载多少个请求, 大于 1 时越大速度越快, 小于 1 时越小越慢, 不能为0.
             spider.Depth = 5; // 设置采集深度
 
             spider.AddDataFlow(new MusicListDataParser());
-            spider.AddRequests("https://music.163.com/#/playlist?id=2964757969"); // 设置起始链接
-            spider.RunAsync(); // 启动
+            //spider.AddRequests("https://music.163.com/#/playlist?id=2964757969"); // 设置起始链接
+             spider.AddRequests(loaction);
+             spider.RunAsync(); // 启动
         }
 
         class MusicListDataParser:DataParser

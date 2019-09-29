@@ -61,14 +61,14 @@ namespace SpiderTest.Music
                 var fs = new FileStream(savePath, FileMode.CreateNew);
                 fs.Write(content, 0, content.Length);
                 Console.ForegroundColor = ConsoleColor.Green;
-                //Console.WriteLine($"下载成功！--链接:{url}");
+                Console.WriteLine("下载成功！");
                 Console.ForegroundColor = ConsoleColor.White;
                 return true;
             }
             catch (Exception e)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                //Console.WriteLine($"下载失败!--链接:{url}--消息:" + e.Message);
+                Console.WriteLine("下载失败！" + e.Message);
                 Console.ForegroundColor = ConsoleColor.White;
                 downloadQueue.Enqueue(request);
                 return false;
