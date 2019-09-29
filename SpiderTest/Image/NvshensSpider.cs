@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Net.Http;
 using System.Threading.Tasks;
 using DotnetSpider;
 using DotnetSpider.DataFlow;
@@ -7,14 +9,15 @@ using DotnetSpider.DataFlow.Parser;
 using DotnetSpider.Downloader;
 using Microsoft.Extensions.Configuration;
 using Serilog;
+using SpiderTest.Music;
 
-namespace SpiderTest
+namespace SpiderTest.Image
 {
     public class NvshensSpider
     {
         public static void Run()
         {
-            ImageDownloader.GetInstance().Start();
+            Downloader.GetInstance().Start();
 
             var builder = new SpiderHostBuilder()
                 .ConfigureLogging(x => x.AddSerilog())
@@ -36,7 +39,7 @@ namespace SpiderTest
 
             spider.Id = Guid.NewGuid().ToString("N"); // 设置任务标识
             spider.Name = "图片采集"; // 设置任务名称
-            spider.Speed = 2; // 设置采集速度, 表示每秒下载多少个请求, 大于 1 时越大速度越快, 小于 1 时越小越慢, 不能为0.
+            spider.Speed = 5; // 设置采集速度, 表示每秒下载多少个请求, 大于 1 时越大速度越快, 小于 1 时越小越慢, 不能为0.
             spider.Depth = 5; // 设置采集深度
             //spider.AddDataFlow(new NvshensTagIndexDataParser());
             spider.AddDataFlow(new NvshensFirstPageTagDataParser());
@@ -306,8 +309,26 @@ namespace SpiderTest
                 request.AddProperty("tag", context.Response.Request.GetProperty("tag"));
                 request.AddProperty("referer", context.Response.Request.GetProperty("referer"));
                 request.AddProperty("subject", context.Selectable.XPath(".//title").GetValue());
-                ImageDownloader.GetInstance().AddRequest(request);
+                var path = GetImagePath(context.Response.Request.GetProperty("tag"), context.Selectable.XPath(".//title").GetValue(), image);
+
+                request.AddProperty("path", path);
+                Downloader.GetInstance().AddRequest(request);
             }
+        }
+
+        private static string GetImagePath(string tag, string subject, string imageUrl)
+        {
+            var fileName = imageUrl.Substring(imageUrl.LastIndexOf('/') + 1, imageUrl.Length - imageUrl.LastIndexOf('/') - 1);
+
+            var tagPath = Environment.CurrentDirectory + "\\Pictures" + "\\" + tag;
+
+            var subjectPath = tagPath + "\\" + subject;
+            if (!Directory.Exists(subjectPath))
+            {
+                Directory.CreateDirectory(subjectPath);
+            }
+            var filePath = subjectPath + "\\" + fileName;
+            return filePath;
         }
     }
 }

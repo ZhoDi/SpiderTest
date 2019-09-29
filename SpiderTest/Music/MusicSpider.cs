@@ -8,6 +8,7 @@ using DotnetSpider.DataFlow;
 using Serilog;
 using Microsoft.Extensions.Configuration;
 using DotnetSpider.Downloader;
+using System.IO;
 
 namespace SpiderTest.Music
 {
@@ -15,7 +16,7 @@ namespace SpiderTest.Music
     {
         public static void Run()
         {
-            ImageDownloader.GetInstance().Start();
+            Downloader.GetInstance().Start();
 
             var builder = new SpiderHostBuilder()
                 .ConfigureLogging(x => x.AddSerilog())
@@ -31,7 +32,7 @@ namespace SpiderTest.Music
                         x.UseDefaultInternetDetector();
                     });
                     services.AddStatisticsCenter(x => x.UseMemory());
-                }).Register<EntitySpider>();
+                });
             var provider = builder.Build();
             var spider = provider.Create<Spider>();
 
@@ -78,12 +79,22 @@ namespace SpiderTest.Music
                         OwnerId = context.Response.Request.OwnerId
                     };
                     request.AddProperty("tag", song.Value);
+                    request.AddProperty("path", GetImagePath(song.Value));
 
-                    ImageDownloader.GetInstance().AddRequest(request);
+                    Downloader.GetInstance().AddRequest(request);
                 }
 
                 return Task.FromResult(DataFlowResult.Success);
             }
+        }
+        private static string GetImagePath(string name)
+        {
+            if (!Directory.Exists(Environment.CurrentDirectory + "\\Music"))
+            {
+                Directory.CreateDirectory(Environment.CurrentDirectory + "\\Music");
+            }
+            var filePath = Environment.CurrentDirectory + "\\Music" + "\\" + name.Replace("|", "").Replace(" ", "").Replace("/", "").Replace("\\", "").Replace(":", "").Replace("<", "").Replace(">", "").Replace(":", "").Replace("?", "").Replace("*", "") + ".mp3";
+            return filePath;
         }
     }
 }

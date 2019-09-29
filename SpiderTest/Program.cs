@@ -1,5 +1,5 @@
 ﻿using DotnetSpider.Sample.samples;
-using SpiderTest.Blog;
+using SpiderTest.Image;
 using SpiderTest.Music;
 using System;
 using System.Threading.Tasks;
@@ -10,8 +10,8 @@ namespace SpiderTest
     {
         static void Main(string[] args)
         {
-            MusicSpider.Run();
-
+            //MusicSpider.Run();
+            NvshensSpider.Run();
             Console.Read();
         }
     }

@@ -1,23 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using DotnetSpider.Downloader;
 
-namespace SpiderTest
+namespace SpiderTest.Music
 {
     /// <summary>
-    /// 图片下载
+    /// 下载
     /// </summary>
-    public class ImageDownloader
+    public class Downloader
     {
         #region 单例
 
-        private static readonly ImageDownloader imageDownloader = new ImageDownloader();
+        private static readonly Downloader imageDownloader = new Downloader();
 
-        public static ImageDownloader GetInstance()
+        public static Downloader GetInstance()
         {
             return imageDownloader;
         }
@@ -43,61 +44,40 @@ namespace SpiderTest
                 if (File.Exists(savePath))
                 {
                     Console.ForegroundColor = ConsoleColor.Gray;
-                    Console.WriteLine("图片已下载跳过！");
+                    Console.WriteLine("下载跳过！");
                     Console.ForegroundColor = ConsoleColor.White;
                     return true;
                 }
 
                 //HttpClient.DefaultRequestHeaders.Referrer = new Uri(request.Properties["referer"]);
-                var message = await HttpClient.GetAsync(new Uri(request.Url));
-                var url = message.Headers.Location;
+                Uri url = new Uri(request.Url);
+                if (HttpClient.GetAsync(request.Url).Result.StatusCode == HttpStatusCode.Redirect)
+                {
+                    var message = await HttpClient.GetAsync(url);
+                    url = message.Headers.Location;
+                }
                 var content = await HttpClient.GetByteArrayAsync(url);
 
                 var fs = new FileStream(savePath, FileMode.CreateNew);
                 fs.Write(content, 0, content.Length);
                 Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine("图片下载成功！");
+                //Console.WriteLine($"下载成功！--链接:{url}");
                 Console.ForegroundColor = ConsoleColor.White;
                 return true;
             }
             catch (Exception e)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("图片下载失败！" + e.Message);
+                //Console.WriteLine($"下载失败!--链接:{url}--消息:" + e.Message);
                 Console.ForegroundColor = ConsoleColor.White;
                 downloadQueue.Enqueue(request);
                 return false;
             }
         }
 
-        private void CreateDirByPath(string path)
-        {
-            if (!Directory.Exists(path))
-            {
-                Directory.CreateDirectory(path);
-            }
-        }
-
-        private string GetImagePath(string name)
-        {
-            //var fileName = imageUrl.Substring(imageUrl.LastIndexOf('=') + 1);
-            //var tagPath = Environment.CurrentDirectory + "\\Pictures" + "\\" + tag;
-
-            //CreateDirByPath(tagPath);
-
-            //var subjectPath = tagPath + "\\" + subject;
-            CreateDirByPath(Environment.CurrentDirectory + "\\Music");
-
-            var filePath = Environment.CurrentDirectory + "\\Music" + "\\" + name + ".mp3";
-            return filePath;
-        }
-
         private async Task<Boolean> DownloadImage(Request request)
         {
-            var tag = request.Properties["tag"].Replace("|", "").Replace(" ", "").Replace("/", "").Replace("\\", "").Replace(":", "").Replace("<", "").Replace(">", "").Replace(":", "").Replace("?", "").Replace("*", "");
-            //var subject = request.Properties["subject"];
-            var fileUrl = request.Url;
-            var filePath = GetImagePath(tag);
+            var filePath = request.Properties["path"];
             await DownloadAsync(request, filePath);
             return true;
         }
