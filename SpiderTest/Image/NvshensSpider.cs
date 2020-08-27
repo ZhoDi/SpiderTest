@@ -46,8 +46,8 @@ namespace SpiderTest.Image
             spider.AddDataFlow(new NvshensPageTagDataParser());
             spider.AddDataFlow(new NvshensFirstPageDetailDataParser());
             spider.AddDataFlow(new NvshensPageDetailDataParser());
-            //spider.AddRequests("https://www.nvshens.com/gallery/"); // 设置起始链接
-            spider.AddRequests("https://www.nvshens.com/gallery/luoli/"); // 设置起始链接
+            //spider.AddRequests("https://www.nvshens.org/gallery/"); // 设置起始链接
+            spider.AddRequests("https://www.nvshens.org/gallery/luoli/"); // 设置起始链接
             spider.RunAsync(); // 启动
         }
 
@@ -58,7 +58,7 @@ namespace SpiderTest.Image
         {//*[@id=\"post_rank\"]/div[2]/div/div[@class='tag_div']/ul/li/a
             public NvshensTagIndexDataParser()
             {
-                Required = DataParserHelper.CheckIfRequiredByRegex("^((https|http)?:\\/\\/)www\\.nvshens\\.com\\/gallery\\/$");
+                Required = DataParserHelper.CheckIfRequiredByRegex("^((https|http)?:\\/\\/)www\\.nvshens\\.org\\/gallery\\/$");
                 //Follow = XpathFollow(".");
             }
 
@@ -105,7 +105,7 @@ namespace SpiderTest.Image
             public NvshensFirstPageTagDataParser()
             {
                 //CanParse = RegexCanParse("^((https|http) ?:\\/\\/)www\\.nvshens\\.com\\/gallery\\/(((\\w)*\\/$)|(\\w*\\/\\d.html$))");
-                Required = DataParserHelper.CheckIfRequiredByRegex("^((https|http) ?:\\/\\/)www\\.nvshens\\.com\\/gallery\\/(\\w)*\\/$");
+                Required = DataParserHelper.CheckIfRequiredByRegex("^((https|http) ?:\\/\\/)www\\.nvshens\\.org\\/gallery\\/(\\w)*\\/$");
             }
 
             protected override Task<DataFlowResult> Parse(DataFlowContext context)
@@ -131,7 +131,7 @@ namespace SpiderTest.Image
         {
             public NvshensPageTagDataParser()
             {
-                Required = DataParserHelper.CheckIfRequiredByRegex("^((https|http) ?:\\/\\/)www\\.nvshens\\.com\\/gallery\\/\\w*\\/\\d+.html$");
+                Required = DataParserHelper.CheckIfRequiredByRegex("^((https|http) ?:\\/\\/)www\\.nvshens\\.org\\/gallery\\/\\w*\\/\\d+.html$");
                 //Follow = XpathFollow(".");
             }
 
@@ -157,7 +157,7 @@ namespace SpiderTest.Image
         {
             public NvshensFirstPageDetailDataParser()
             {
-                Required = DataParserHelper.CheckIfRequiredByRegex("^((https|http)?:\\/\\/)www\\.nvshens\\.com\\/\\w+\\/\\d*\\/$");
+                Required = DataParserHelper.CheckIfRequiredByRegex("^((https|http)?:\\/\\/)www\\.nvshens\\.org\\/\\w+\\/\\d*\\/$");
                 //Follow = XpathFollow(".");
             }
 
@@ -177,7 +177,7 @@ namespace SpiderTest.Image
         {
             public NvshensPageDetailDataParser()
             {
-                Required = DataParserHelper.CheckIfRequiredByRegex("^((https|http)?:\\/\\/)www\\.nvshens\\.com\\/\\w\\/\\d*\\/\\d+.html$");
+                Required = DataParserHelper.CheckIfRequiredByRegex("^((https|http)?:\\/\\/)www\\.nvshens\\.org\\/\\w\\/\\d*\\/\\d+.html$");
                 //Follow = XpathFollow(".");
             }
 
@@ -312,6 +312,10 @@ namespace SpiderTest.Image
                 var path = GetImagePath(context.Response.Request.GetProperty("tag"), context.Selectable.XPath(".//title").GetValue(), image);
 
                 request.AddProperty("path", path);
+                if (request==null)
+                {
+                    Console.WriteLine("为空");
+                }
                 Downloader.GetInstance().AddRequest(request);
             }
         }
@@ -322,12 +326,12 @@ namespace SpiderTest.Image
 
             var tagPath = Environment.CurrentDirectory + "\\Pictures" + "\\" + tag;
 
-            var subjectPath = tagPath + "\\" + subject;
+            var subjectPath = tagPath + "\\" + subject.Trim();
             if (!Directory.Exists(subjectPath))
             {
                 Directory.CreateDirectory(subjectPath);
             }
-            var filePath = subjectPath + "\\" + fileName;
+            var filePath = subjectPath + "\\" + fileName.Trim();
             return filePath;
         }
     }

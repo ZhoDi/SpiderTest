@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using DotnetSpider.Downloader;
+using Org.BouncyCastle.Ocsp;
 
 namespace SpiderTest.Music
 {
@@ -20,6 +21,18 @@ namespace SpiderTest.Music
 
         public static Downloader GetInstance()
         {
+
+            //HttpClient.DefaultRequestHeaders.Add("authority", "img.onvshen.com:85");
+            //HttpClient.DefaultRequestHeaders.Add("method", "GET");
+            //HttpClient.DefaultRequestHeaders.Add("scheme", "https");
+            //HttpClient.DefaultRequestHeaders.Add("accept", "image/webp,image/apng,image/*,*/*;q=0.8");
+            //HttpClient.DefaultRequestHeaders.Add("accept-encoding", "gzip, deflate, br");
+            //HttpClient.DefaultRequestHeaders.Add("accept-language", "zh-CN,zh;q=0.9,en;q=0.8");
+            //HttpClient.DefaultRequestHeaders.Add("sec-fetch-dest", "image");
+            //HttpClient.DefaultRequestHeaders.Add("sec-fetch-mode", "no-cors");
+            //HttpClient.DefaultRequestHeaders.Add("sec-fetch-site", "cross-site");
+
+
             return imageDownloader;
         }
 
@@ -27,7 +40,8 @@ namespace SpiderTest.Music
 
         #region 内部字段
 
-        private static readonly HttpClient HttpClient = new HttpClient();
+        //private static readonly HttpClient HttpClient = new HttpClient();
+
 
         private readonly Queue<Request> downloadQueue = new Queue<Request>();
 
@@ -48,14 +62,26 @@ namespace SpiderTest.Music
                     Console.ForegroundColor = ConsoleColor.White;
                     return true;
                 }
+                string urlnew = request.Url.Replace("/s/", "/");
 
-                //HttpClient.DefaultRequestHeaders.Referrer = new Uri(request.Properties["referer"]);
-                Uri url = new Uri(request.Url);
-                if (HttpClient.GetAsync(request.Url).Result.StatusCode == HttpStatusCode.Redirect)
+                HttpClient HttpClient = new HttpClient();
+
+                HttpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.135 Safari/537.36");
+
+                HttpClient.DefaultRequestHeaders.Referrer = new Uri("https://www.nvshens.org/img.html?img=" + urlnew);
+
+                //string urlTest = request.Url;
+
+                //HttpClient.DefaultRequestHeaders.Add("path", urlTest.Substring(urlTest.IndexOf("85/") + 2));
+
+                Uri url = new Uri(urlnew);
+                if (HttpClient.GetAsync(url).Result.StatusCode == HttpStatusCode.Redirect)
                 {
+                    Console.WriteLine("跳转");
                     var message = await HttpClient.GetAsync(url);
                     url = message.Headers.Location;
                 }
+                Console.WriteLine("下载地址：" + url);
                 var content = await HttpClient.GetByteArrayAsync(url);
 
                 var fs = new FileStream(savePath, FileMode.CreateNew);
@@ -68,9 +94,9 @@ namespace SpiderTest.Music
             catch (Exception e)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("下载失败！" + e.Message);
+                Console.WriteLine("下载失败！" + e.Message + "地址：" + request.Url);
+                Console.WriteLine();
                 Console.ForegroundColor = ConsoleColor.White;
-                downloadQueue.Enqueue(request);
                 return false;
             }
         }
@@ -83,7 +109,7 @@ namespace SpiderTest.Music
         }
 
         #endregion
-        
+
         #region 公共方法
 
         /// <summary>
@@ -104,12 +130,21 @@ namespace SpiderTest.Music
 
             _timer = new Timer(state =>
             {
-                if (downloadQueue.Count > 0)
+
+                lock (downloadQueue)
                 {
-                    Task.Run(async () =>
+                    if (downloadQueue.Count > 0)
                     {
-                        await DownloadImage(downloadQueue.Dequeue());
-                    });
+                        Task.Run(async () =>
+                        {
+                            var queue = downloadQueue.Dequeue();
+                            if (queue==null)
+                            {
+                                return;
+                            }
+                            await DownloadImage(queue);
+                        });
+                    }
                 }
 
             }, null, 1000, 500);

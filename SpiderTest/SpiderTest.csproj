@@ -6,8 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DotnetSpider" Version="4.0.9-beta3" />
-    <PackageReference Include="DotnetSpider.Kafka" Version="4.0.9-beta3" />
+    <PackageReference Include="DotnetSpider" Version="4.0.9-beta5" />
+    <PackageReference Include="DotnetSpider.Kafka" Version="4.0.9-beta5" />
   </ItemGroup>
 
   <ItemGroup>
